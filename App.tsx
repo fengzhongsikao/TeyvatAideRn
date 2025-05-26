@@ -16,7 +16,7 @@ import {
   Button,
   FlatList,
   Image,
-  PermissionsAndroid,
+  DimensionValue,
 } from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
@@ -89,11 +89,11 @@ function App(): React.JSX.Element {
             toggleSwitch={toggleSwitch}
             formattedDate={formattedDate}
             dayOfWeek={dayOfWeek}
-            weekdays={weekdays}
+            weekdays1={weekdays}
             btnNow={btnNow}
             switchDay={switchDay}
             safePadding={safePadding}
-            Colors={Colors}
+            Colors1={Colors}
           />
         }
         data={filteredData}
@@ -106,6 +106,7 @@ function App(): React.JSX.Element {
             style={styles.image}
           />
         )}
+        // eslint-disable-next-line react-native/no-inline-styles
         style={{marginBottom: 30}}
       />
     </View>
@@ -117,17 +118,11 @@ interface CustomComponentProps {
   toggleSwitch: () => void; // 切换开关的回调函数
   formattedDate: string; // 格式化的日期
   dayOfWeek: string; // 当前星期
-  weekdays: Array<{
-    text: string; // 星期文本
-    week: number; // 星期编号
-  }>; // 星期数组
+  weekdays1:Array<BtnItem>; // 星期数组
   btnNow: number; // 当前选中的星期编号
   switchDay: (week: number) => void; // 切换星期的回调函数
-  safePadding: string; // 安全区域的内边距
-  Colors: {
-    black: string; // 暗色模式下的背景颜色
-    white: string; // 亮色模式下的背景颜色
-  }; // 颜色主题
+  safePadding: DimensionValue; // 安全区域的内边距
+  Colors1: any; // 颜色主题
 }
 
 const CustomComponent :React.FC<CustomComponentProps>  = ({
@@ -136,16 +131,16 @@ const CustomComponent :React.FC<CustomComponentProps>  = ({
   toggleSwitch,
   formattedDate,
   dayOfWeek,
-  weekdays,
+  weekdays1,
   btnNow,
   switchDay,
   safePadding,
-  Colors,
+  Colors1,
 }) => {
   return (
     <View
       style={{
-        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        backgroundColor: isDarkMode ? Colors1.black : Colors1.white,
         paddingHorizontal: safePadding,
         paddingBottom: safePadding,
       }}>
@@ -167,7 +162,7 @@ const CustomComponent :React.FC<CustomComponentProps>  = ({
       </View>
 
       <View style={styles.container2}>
-        {weekdays.map((weekday, index) => (
+        {weekdays1.map((weekday, index) => (
           <View key={index} style={styles.buttonWrapper}>
             <Button
               title={weekday.text}
