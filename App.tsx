@@ -21,7 +21,7 @@ import {
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-import {images} from './utils/images';
+import {images, character, weapon} from './utils/images';
 
 function getDayOfWeek(date: Date): string {
   const days = [
@@ -48,7 +48,6 @@ const weekdays: Array<BtnItem> = [
 ];
 import data from './data/json/calendar.json';
 
-
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -58,7 +57,16 @@ function App(): React.JSX.Element {
   const safePadding = '5%';
 
   const [isEnabled, setIsEnabled] = useState(true);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  const [selectedType, setSelectedType] = useState('character');
+
+  const toggleSwitch = () => {
+    setIsEnabled(previousState => !previousState);
+    if (isEnabled) {
+      setSelectedType('weapon');
+    } else {
+      setSelectedType('character');
+    }
+  };
 
   const date = new Date();
   const formattedDate = `${date.getFullYear()}-${String(
@@ -73,7 +81,9 @@ function App(): React.JSX.Element {
     setBtnNow(day); // 更新当前选中的按钮
   };
 
-  const filteredData = data.filter(item => item.dropDays.includes(btnNow));
+  const filteredData = data.filter(
+    item => item.dropDays.includes(btnNow) && selectedType === item.itemType,
+  );
 
   return (
     <View style={backgroundStyle}>
@@ -101,10 +111,13 @@ function App(): React.JSX.Element {
         keyExtractor={item => item.id.toString()}
         initialNumToRender={15}
         renderItem={({item}) => (
-          <Image
-            source={images[item.star.toString() as keyof typeof images]}
-            style={styles.image}
-          />
+          <View style={styles.imageContainer}>
+            <Image
+              source={images[item.star.toString() as keyof typeof images]}
+              style={styles.backgroundImage}
+            />
+           {isEnabled ? <Image source={character[item.id.toString() as keyof typeof character] } style={styles.overlayImage} /> : <Image source={weapon[item.id.toString() as keyof typeof weapon] } style={styles.overlayImage} /> }
+          </View>
         )}
         // eslint-disable-next-line react-native/no-inline-styles
         style={{marginBottom: 30}}
@@ -118,14 +131,14 @@ interface CustomComponentProps {
   toggleSwitch: () => void; // 切换开关的回调函数
   formattedDate: string; // 格式化的日期
   dayOfWeek: string; // 当前星期
-  weekdays1:Array<BtnItem>; // 星期数组
+  weekdays1: Array<BtnItem>; // 星期数组
   btnNow: number; // 当前选中的星期编号
   switchDay: (week: number) => void; // 切换星期的回调函数
   safePadding: DimensionValue; // 安全区域的内边距
   Colors1: any; // 颜色主题
 }
 
-const CustomComponent :React.FC<CustomComponentProps>  = ({
+const CustomComponent: React.FC<CustomComponentProps> = ({
   isDarkMode,
   isEnabled,
   toggleSwitch,
@@ -184,6 +197,23 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginLeft: 10,
   },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    marginRight: 10,
+    marginLeft: 10,
+  },
+  overlayImage: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+  },
   container: {
     flex: 1,
     flexDirection: 'row',
@@ -206,7 +236,7 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     margin: 5, // 添加按钮之间的间距
   },
-  itemText:{
+  itemText: {
     marginRight: 5,
   },
 });
