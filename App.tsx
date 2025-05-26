@@ -5,53 +5,67 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, {useState} from 'react';
 import {
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   useColorScheme,
   View,
+  Switch,
+  Button,
+  FlatList,
+  Image,
+  PermissionsAndroid,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import {images} from './utils/images';
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+function getDayOfWeek(date: Date): string {
+  const days = [
+    '星期日',
+    '星期一',
+    '星期二',
+    '星期三',
+    '星期四',
+    '星期五',
+    '星期六',
+  ];
+  return days[date.getDay()];
+}
+
+type BtnItem = {week: 1 | 2 | 3 | 4 | 5 | 6 | 7; text: string};
+const weekdays: Array<BtnItem> = [
+  {week: 7, text: '周日'},
+  {week: 1, text: '周一'},
+  {week: 2, text: '周二'},
+  {week: 3, text: '周三'},
+  {week: 4, text: '周四'},
+  {week: 5, text: '周五'},
+  {week: 6, text: '周六'},
+];
+import data from './data/json/calendar.json';
+
+async function requestStoragePermission() {
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      {
+        title: 'Storage Permission',
+        message: 'App needs access to your storage',
+        buttonPositive: '',
+      },
+    );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log('You can use the storage');
+    } else {
+      console.log('Storage permission denied');
+    }
+  } catch (err) {
+    console.warn(err);
+  }
 }
 
 function App(): React.JSX.Element {
@@ -62,59 +76,164 @@ function App(): React.JSX.Element {
   };
   const safePadding = '5%';
 
+  const [isEnabled, setIsEnabled] = useState(true);
+  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+
+  const date = new Date();
+  const formattedDate = `${date.getFullYear()}-${String(
+    date.getMonth() + 1,
+  ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const dayOfWeek = getDayOfWeek(date);
+  const dayNow = date.getDay();
+
+  const [btnNow, setBtnNow] = useState<number>(dayNow); // 当前选中的按钮
+
+  const switchDay = (day: number) => {
+    setBtnNow(day); // 更新当前选中的按钮
+  };
+
+  const filteredData = data.filter(item => item.dropDays.includes(btnNow));
+  requestStoragePermission();
+
   return (
     <View style={backgroundStyle}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <FlatList
+        ListHeaderComponent={
+          <CustomComponent
+            isDarkMode={isDarkMode}
+            isEnabled={isEnabled}
+            toggleSwitch={toggleSwitch}
+            formattedDate={formattedDate}
+            dayOfWeek={dayOfWeek}
+            weekdays={weekdays}
+            btnNow={btnNow}
+            switchDay={switchDay}
+            safePadding={safePadding}
+            Colors={Colors}
+          />
+        }
+        data={filteredData}
+        numColumns={3}
+        keyExtractor={item => item.id.toString()}
+        initialNumToRender={15}
+        renderItem={({item}) => (
+          <Image
+            source={images[item.star.toString() as keyof typeof images]}
+            style={styles.image}
+          />
+        )}
+        style={{marginBottom: 30}}
+      />
     </View>
   );
 }
+interface CustomComponentProps {
+  isDarkMode: boolean; // 是否是暗色模式
+  isEnabled: boolean; // 是否启用
+  toggleSwitch: () => void; // 切换开关的回调函数
+  formattedDate: string; // 格式化的日期
+  dayOfWeek: string; // 当前星期
+  weekdays: Array<{
+    text: string; // 星期文本
+    week: number; // 星期编号
+  }>; // 星期数组
+  btnNow: number; // 当前选中的星期编号
+  switchDay: (week: number) => void; // 切换星期的回调函数
+  safePadding: string; // 安全区域的内边距
+  Colors: {
+    black: string; // 暗色模式下的背景颜色
+    white: string; // 亮色模式下的背景颜色
+  }; // 颜色主题
+}
+
+const CustomComponent :React.FC<CustomComponentProps>  = ({
+  isDarkMode,
+  isEnabled,
+  toggleSwitch,
+  formattedDate,
+  dayOfWeek,
+  weekdays,
+  btnNow,
+  switchDay,
+  safePadding,
+  Colors,
+}) => {
+  return (
+    <View
+      style={{
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        paddingHorizontal: safePadding,
+        paddingBottom: safePadding,
+      }}>
+      <View style={styles.container}>
+        <Switch
+          trackColor={{false: '#767577', true: '#81b0ff'}}
+          thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={toggleSwitch}
+          value={isEnabled}
+        />
+        <Text>{isEnabled ? '角色' : '武器'}</Text>
+      </View>
+
+      <View style={styles.container}>
+        {' '}
+        <Text style={styles.itemText}>今日素材</Text>
+        <Text style={styles.itemText}>{formattedDate}</Text>
+        <Text style={styles.itemText}>{dayOfWeek}</Text>
+      </View>
+
+      <View style={styles.container2}>
+        {weekdays.map((weekday, index) => (
+          <View key={index} style={styles.buttonWrapper}>
+            <Button
+              title={weekday.text}
+              color={weekday.week === btnNow ? '#ffcd0c' : '#393b40'}
+              onPress={() => switchDay(weekday.week)}
+            />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  image: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    marginRight: 10,
+    marginLeft: 10,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  container2: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
   },
-  highlight: {
-    fontWeight: '700',
+  container3: {
+    flex: 1,
+    flexDirection: 'row', // 设置主轴方向为水平
+    flexWrap: 'wrap', // 允许子元素换行
+    justifyContent: 'space-between', // 每行的子元素之间间距均匀分布
+  },
+  buttonWrapper: {
+    margin: 5, // 添加按钮之间的间距
+  },
+  itemText:{
+    marginRight: 5,
   },
 });
 
