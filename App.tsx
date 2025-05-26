@@ -48,25 +48,6 @@ const weekdays: Array<BtnItem> = [
 ];
 import data from './data/json/calendar.json';
 
-async function requestStoragePermission() {
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      {
-        title: 'Storage Permission',
-        message: 'App needs access to your storage',
-        buttonPositive: '',
-      },
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      console.log('You can use the storage');
-    } else {
-      console.log('Storage permission denied');
-    }
-  } catch (err) {
-    console.warn(err);
-  }
-}
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -93,7 +74,6 @@ function App(): React.JSX.Element {
   };
 
   const filteredData = data.filter(item => item.dropDays.includes(btnNow));
-  requestStoragePermission();
 
   return (
     <View style={backgroundStyle}>
@@ -181,7 +161,6 @@ const CustomComponent :React.FC<CustomComponentProps>  = ({
       </View>
 
       <View style={styles.container}>
-        {' '}
         <Text style={styles.itemText}>今日素材</Text>
         <Text style={styles.itemText}>{formattedDate}</Text>
         <Text style={styles.itemText}>{dayOfWeek}</Text>
