@@ -87,10 +87,10 @@ function App(): React.JSX.Element {
 
   return (
     <View style={backgroundStyle}>
-      <StatusBar
+      {/* <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
-      />
+      /> */}
       <FlatList
         ListHeaderComponent={
           <CustomComponent
